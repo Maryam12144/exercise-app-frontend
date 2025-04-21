@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import api from './api';
-import Home from './Home'; // 👈 Make sure this is your Home component
-import { BrowserRouter as Router } from 'react-router-dom';
+import Home from './Home';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
-function App() {
+function Auth() {
   const [isSignup, setIsSignup] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,73 +20,68 @@ function App() {
       const response = await api.post(endpoint, payload);
       const userName = response.data.user.name;
       setWelcomeMessage(`Welcome ${isSignup ? '' : 'back, '}${userName} 🎉`);
-      setIsLoggedIn(true);
+      setTimeout(() => navigate('/home'), 1000); // delay just for fun UI feel
     } catch (error) {
       console.error("❌ Error:", error.response?.data || error.message);
       alert("Something went wrong!");
     }
   };
 
-  if (isLoggedIn) {
-  return <Home setIsLoggedIn={() => {
-    setIsLoggedIn(false);
-    setWelcomeMessage('');
-  }} />;
+  return (
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>Move Mate</h1>
+        {welcomeMessage && <h2 style={styles.welcome}>{welcomeMessage}</h2>}
+
+        <form onSubmit={handleSubmit} style={styles.form}>
+          {isSignup && (
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              style={styles.input}
+            />
+          )}
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <button type="submit" style={styles.button}>
+            {isSignup ? 'Sign Up' : 'Sign In'}
+          </button>
+        </form>
+
+        <button onClick={() => setIsSignup(!isSignup)} style={styles.toggle}>
+          {isSignup ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+        </button>
+      </div>
+    </div>
+  );
 }
 
+function App() {
   return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Move Mate</h1>
-          {welcomeMessage ? (
-            <h2 style={styles.welcome}>{welcomeMessage}</h2>
-          ) : (
-            <form onSubmit={handleSubmit} style={styles.form}>
-              {isSignup && (
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  style={styles.input}
-                />
-              )}
-
-              <input
-                type="email"
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={styles.input}
-              />
-
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={styles.input}
-              />
-
-              <button type="submit" style={styles.button}>
-                {isSignup ? 'Sign Up' : 'Sign In'}
-              </button>
-            </form>
-          )}
-
-          {!welcomeMessage && (
-            <button
-              onClick={() => setIsSignup(!isSignup)}
-              style={styles.toggle}
-            >
-              {isSignup ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-            </button>
-          )}
-        </div>
-      </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Auth />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
 
